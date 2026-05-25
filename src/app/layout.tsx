@@ -61,7 +61,11 @@ export default function RootLayout({
               <Link href="/cari" className={navLinkClass}>
                 Cari Dosen
               </Link>
-              <Link href="/cari" className={navLinkClass}>
+              <Link
+                href="#"
+                aria-disabled="true"
+                className="text-sm font-medium text-stone-400 cursor-not-allowed"
+              >
                 Cari Universitas
               </Link>
               <Link href="/tambah-dosen" className={navLinkClass}>
@@ -72,13 +76,13 @@ export default function RootLayout({
             <div className="flex items-center gap-2">
               <Link
                 href="/masuk"
-                className="hidden sm:inline-flex h-9 items-center px-4 rounded-lg text-sm font-semibold text-stone-700 hover:bg-stone-100 transition"
+                className="hidden sm:inline-flex items-center px-4 py-1.5 rounded-md text-sm font-medium text-stone-700 hover:bg-stone-100 transition"
               >
                 Masuk
               </Link>
               <Link
                 href="/masuk?signup=1"
-                className="inline-flex h-9 items-center px-4 rounded-lg text-sm font-semibold bg-emerald-700 text-white hover:bg-emerald-800 shadow-sm shadow-emerald-900/20 transition"
+                className="inline-flex items-center px-4 py-1.5 rounded-md text-sm font-medium bg-emerald-700 text-white hover:bg-emerald-800 transition"
               >
                 Daftar
               </Link>
