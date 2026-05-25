@@ -1,11 +1,19 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import {
+  ArrowRight,
+  ChevronRight,
+  GraduationCap,
+  Info,
+  MessageSquare,
+  Quote,
+  Sparkles,
+  ThumbsUp,
+  TrendingUp,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { DosenIdentity } from "@/components/dosen-identity";
-import { RatingPanel } from "@/components/rating-panel";
-import { ScoreList } from "@/components/score-row";
 import { ReviewCard } from "@/components/review-card";
-import { MutedTag } from "@/components/personality-tags";
+import { ratingTone, RATE_COLORS } from "@/lib/rating";
 
 export const revalidate = 0;
 
@@ -108,23 +116,19 @@ export default async function ProfessorProfilePage({
 
   const scoreItems = [
     {
-      label: "KEJELASAN",
-      icon: "/profku/icons/reputasi.png",
+      label: "Kejelasan",
       value: professor.avg_rating ?? 0,
     },
     {
-      label: "MATERI",
-      icon: "/profku/icons/organisasi.png",
+      label: "Materi",
       value: professor.avg_rating ?? 0,
     },
     {
-      label: "KESULITAN",
-      icon: "/profku/icons/keamanan.png",
+      label: "Kesulitan",
       value: 5 - (professor.avg_difficulty ?? 3),
     },
     {
-      label: "MAU LAGI",
-      icon: "/profku/icons/reputasi.png",
+      label: "Mau Lagi",
       value: (professor.would_take_again_pct ?? 0) / 20,
     },
   ];
@@ -133,289 +137,300 @@ export default async function ProfessorProfilePage({
     ? `${professor.full_name}, ${professor.title}`
     : professor.full_name;
 
+  const aggregate = professor.avg_rating ?? 0;
+  const aggTone = ratingTone(aggregate);
+  const totalReviews = ratingDist.reduce((a, b) => a + b, 0);
+
   return (
-    <div
-      style={{
-        background: "var(--pk-cream)",
-        padding: "32px 47px 80px",
-        maxWidth: 1440,
-        margin: "0 auto",
-        display: "flex",
-        flexDirection: "column",
-        gap: 28,
-      }}
-    >
-      {/* Pending banner */}
+    <div className="max-w-7xl mx-auto px-6 lg:px-8 py-10 space-y-10">
       {resolvedQuery.pending === "true" && (
-        <div
-          style={{
-            background: "var(--pk-info-soft)",
-            border: "1px solid var(--pk-info)",
-            borderRadius: 20,
-            padding: "20px 28px",
-            display: "flex",
-            flexDirection: "column",
-            gap: 6,
-          }}
-        >
-          <h3
-            style={{
-              margin: 0,
-              fontFamily: "var(--pk-font-ui)",
-              fontWeight: 700,
-              fontSize: 18,
-              color: "var(--pk-ink)",
-            }}
-          >
-            Dosen Berhasil Diajukan!
-          </h3>
-          <p
-            style={{
-              margin: 0,
-              fontFamily: "var(--pk-font-ui)",
-              fontSize: 14,
-              color: "var(--pk-fg-2)",
-            }}
-          >
-            Profil dosen ini masih dalam status &quot;Pending&quot; dan menunggu
-            moderasi tim ProfKu sebelum muncul di hasil pencarian. Tapi kamu
-            sudah bisa langsung memberikan ulasan!
-          </p>
+        <div className="rounded-xl bg-amber-50 ring-1 ring-amber-200 p-5 flex gap-4 items-start">
+          <div className="grid place-items-center size-9 rounded-lg bg-amber-100 shrink-0">
+            <Info className="size-5 text-amber-700" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-base font-semibold text-amber-900">
+              Dosen Berhasil Diajukan!
+            </h3>
+            <p className="text-sm text-amber-800 leading-relaxed">
+              Profil dosen ini masih dalam status &quot;Pending&quot; dan
+              menunggu moderasi tim ProfKu sebelum muncul di hasil pencarian.
+              Tapi kamu sudah bisa langsung memberikan ulasan!
+            </p>
+          </div>
         </div>
       )}
 
-      {/* Breadcrumb */}
-      <div
-        style={{
-          display: "flex",
-          gap: 10,
-          alignItems: "center",
-          fontFamily: "var(--pk-font-ui)",
-          fontSize: 14,
-          fontWeight: 600,
-          color: "var(--pk-fg-3)",
-        }}
+      <nav
+        aria-label="Breadcrumb"
+        className="flex items-center gap-2 text-sm text-stone-500"
       >
-        <Link href="/" style={{ color: "inherit" }}>
+        <Link href="/" className="hover:text-stone-900 transition">
           Beranda
         </Link>
-        <span>/</span>
-        <Link href="/cari" style={{ color: "inherit" }}>
+        <ChevronRight className="size-4 text-stone-300" />
+        <Link href="/cari" className="hover:text-stone-900 transition">
           Hasil Pencarian
         </Link>
-        <span>/</span>
-        <span style={{ color: "var(--pk-ink)" }}>{professor.full_name}</span>
-      </div>
+        <ChevronRight className="size-4 text-stone-300" />
+        <span className="text-stone-900 font-medium truncate">
+          {professor.full_name}
+        </span>
+      </nav>
 
-      {/* Top: identity + ratings */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "minmax(0, 654px) minmax(0, 1fr)",
-          gap: 36,
-        }}
-      >
-        <DosenIdentity
-          id={professor.id}
-          name={displayName}
-          department={department?.name}
-          university={university?.name}
-          ratingCount={professor.review_count ?? 0}
-          likePct={professor.would_take_again_pct}
-          difficulty={professor.avg_difficulty}
-        />
-        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-          <RatingPanel counts={ratingDist} />
-          <div
-            style={{
-              background: "var(--pk-lavender)",
-              borderRadius: 25,
-              padding: "20px 24px",
-              display: "flex",
-              flexDirection: "column",
-              gap: 12,
-            }}
-          >
-            <span
-              style={{
-                fontFamily: "var(--pk-font-ui)",
-                fontWeight: 700,
-                fontSize: 20,
-                color: "var(--pk-ink)",
-              }}
-            >
-              Dosen Sepertinya
-            </span>
-            <p
-              style={{
-                margin: 0,
-                fontFamily: "var(--pk-font-ui)",
-                fontWeight: 500,
-                fontSize: 14,
-                color: "var(--pk-fg-2)",
-              }}
-            >
-              Sistem rekomendasi dosen serupa segera hadir.
+      {/* Hero split: identity + KPI rail */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+        {/* Identity card */}
+        <div className="lg:col-span-2 rounded-2xl bg-white p-6 lg:p-8 ring-1 ring-stone-200">
+          <div className="flex flex-col sm:flex-row sm:items-start gap-6">
+            <div className="grid place-items-center size-20 rounded-full bg-emerald-50 ring-1 ring-emerald-100 shrink-0">
+              <GraduationCap className="size-10 text-emerald-700" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-stone-900 leading-tight">
+                {displayName}
+              </h1>
+              <p className="mt-2 text-base text-stone-600">
+                {department?.name && <>Dosen {department.name}</>}
+                {university?.name && (
+                  <>
+                    <span className="text-stone-300 mx-2">·</span>
+                    {university.name}
+                  </>
+                )}
+              </p>
+              {faculty?.name && (
+                <p className="mt-1 text-sm text-stone-500">{faculty.name}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-8 pt-8 border-t border-stone-100 flex flex-col sm:flex-row sm:items-end gap-6">
+            <div>
+              <div className="flex items-baseline gap-2">
+                <span
+                  className={`text-6xl sm:text-7xl font-bold tabular-nums leading-none ${aggTone.text}`}
+                >
+                  {aggregate.toFixed(1)}
+                </span>
+                <span className="text-2xl font-semibold text-stone-300 tabular-nums">
+                  /5.0
+                </span>
+              </div>
+              <p className="mt-2 text-sm text-stone-500">
+                Rating Keseluruhan
+                <span className="text-stone-300 mx-1.5">·</span>
+                {(professor.review_count ?? 0).toLocaleString("id-ID")} ulasan
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3 sm:ml-auto">
+              <Link
+                href={`/dosen/${professor.id}/tulis-ulasan`}
+                className="inline-flex items-center gap-2 h-11 px-5 rounded-lg bg-emerald-700 text-white text-sm font-semibold hover:bg-emerald-800 shadow-sm shadow-emerald-900/20 transition"
+              >
+                Tulis Ulasan
+                <ArrowRight className="size-4" />
+              </Link>
+              <Link
+                href="/cari"
+                className="inline-flex items-center h-11 px-5 rounded-lg bg-white text-stone-700 text-sm font-semibold ring-1 ring-stone-200 hover:bg-stone-50 transition"
+              >
+                Bandingkan
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* KPI rail */}
+        <div className="grid grid-cols-2 lg:grid-cols-1 gap-4">
+          <div className="rounded-xl bg-white p-5 ring-1 ring-stone-200">
+            <div className="flex items-center gap-2 text-stone-500">
+              <ThumbsUp className="size-4" />
+              <span className="text-xs font-semibold tracking-wide uppercase">
+                Mau Diajar Lagi
+              </span>
+            </div>
+            <p className="mt-3 text-3xl lg:text-4xl font-bold tabular-nums text-stone-900">
+              {professor.would_take_again_pct != null
+                ? `${professor.would_take_again_pct}%`
+                : "—"}
+            </p>
+          </div>
+          <div className="rounded-xl bg-white p-5 ring-1 ring-stone-200">
+            <div className="flex items-center gap-2 text-stone-500">
+              <TrendingUp className="size-4" />
+              <span className="text-xs font-semibold tracking-wide uppercase">
+                Tingkat Kesulitan
+              </span>
+            </div>
+            <p className="mt-3 text-3xl lg:text-4xl font-bold tabular-nums text-stone-900">
+              {professor.avg_difficulty != null
+                ? professor.avg_difficulty.toFixed(1)
+                : "—"}
+              <span className="text-base font-semibold text-stone-300 ml-1">
+                /5
+              </span>
             </p>
           </div>
         </div>
       </div>
 
-      {/* Tags + per-aspek scores */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "minmax(0, 1.2fr) minmax(0, 1fr)",
-          gap: 24,
-        }}
-      >
-        <div
-          style={{
-            background: "var(--pk-paper)",
-            borderRadius: 30,
-            padding: "28px 32px",
-            display: "flex",
-            flexDirection: "column",
-            gap: 18,
-          }}
-        >
-          <h3
-            style={{
-              margin: 0,
-              fontFamily: "var(--pk-font-ui)",
-              fontWeight: 800,
-              fontSize: 28,
-              color: "var(--pk-ink)",
-            }}
-          >
-            Top Tags
-          </h3>
-          {tags.length > 0 ? (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-              {tags.map((t) => (
-                <MutedTag key={t}>{t}</MutedTag>
-              ))}
-            </div>
-          ) : (
-            <p
-              style={{
-                margin: 0,
-                fontFamily: "var(--pk-font-ui)",
-                fontWeight: 500,
-                fontSize: 15,
-                color: "var(--pk-fg-3)",
-              }}
-            >
-              Belum ada tag — jadilah yang pertama menulis review!
-            </p>
-          )}
+      {/* Aspect scores + distribution */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+        <div className="rounded-xl bg-white p-6 lg:p-7 ring-1 ring-stone-200">
+          <h2 className="text-lg font-semibold text-stone-900">
+            Rating Per Aspek
+          </h2>
+          <div className="mt-5 space-y-4">
+            {scoreItems.map((item) => {
+              const pct = Math.max(
+                0,
+                Math.min(100, (item.value / 5) * 100)
+              );
+              const tone = ratingTone(item.value);
+              return (
+                <div key={item.label} className="space-y-1.5">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="text-sm font-medium text-stone-700">
+                      {item.label}
+                    </span>
+                    <span className="text-sm font-bold tabular-nums text-stone-900">
+                      {item.value.toFixed(1)}
+                    </span>
+                  </div>
+                  <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full ${tone.bar} rounded-full transition-all`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
-        <div
-          style={{
-            background: "var(--pk-paper)",
-            borderRadius: 30,
-            padding: "28px 32px",
-          }}
-        >
-          <ScoreList items={scoreItems} title="Rating Per Aspek" />
+
+        <div className="rounded-xl bg-white p-6 lg:p-7 ring-1 ring-stone-200">
+          <div className="flex items-baseline justify-between">
+            <h2 className="text-lg font-semibold text-stone-900">
+              Distribusi Rating
+            </h2>
+            <span className="text-sm text-stone-500">
+              {totalReviews.toLocaleString("id-ID")} ulasan
+            </span>
+          </div>
+          <div className="mt-5 space-y-3">
+            {[5, 4, 3, 2, 1].map((n) => {
+              const count = ratingDist[n - 1];
+              const pct = totalReviews ? (count / totalReviews) * 100 : 0;
+              const tone = ratingTone(n);
+              return (
+                <div key={n} className="grid grid-cols-[auto_1fr_auto] items-center gap-3">
+                  <span className="inline-flex items-center gap-1 text-sm font-semibold text-stone-700 tabular-nums">
+                    {n}
+                    <span
+                      aria-hidden
+                      className="size-2 rounded-full"
+                      style={{ background: RATE_COLORS[n - 1] }}
+                    />
+                  </span>
+                  <div className="h-2.5 bg-stone-100 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full ${tone.bar} rounded-full transition-all`}
+                      style={{ width: `${Math.max(pct, count > 0 ? 4 : 0)}%` }}
+                    />
+                  </div>
+                  <span className="text-sm tabular-nums text-stone-500 w-14 text-right">
+                    {count} ({pct.toFixed(0)}%)
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
 
+      {/* Top tags */}
+      <div className="rounded-xl bg-white p-6 lg:p-7 ring-1 ring-stone-200">
+        <div className="flex items-center gap-2">
+          <Sparkles className="size-5 text-emerald-700" />
+          <h2 className="text-lg font-semibold text-stone-900">Top Tags</h2>
+        </div>
+        {tags.length > 0 ? (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {tags.map((t) => (
+              <span
+                key={t}
+                className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-800 ring-1 ring-inset ring-emerald-100"
+              >
+                {t}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <p className="mt-4 text-sm text-stone-500">
+            Belum ada tag — jadilah yang pertama menulis review!
+          </p>
+        )}
+      </div>
+
       {/* Reviews */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "baseline",
-            justifyContent: "space-between",
-          }}
-        >
-          <h3
-            style={{
-              margin: 0,
-              fontFamily: "var(--pk-font-ui)",
-              fontWeight: 800,
-              fontSize: 32,
-              color: "var(--pk-ink)",
-              letterSpacing: "-0.01em",
-            }}
-          >
-            Review Mahasiswa ({reviews.length})
-          </h3>
+      <div className="space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <h2 className="text-2xl lg:text-3xl font-bold tracking-tight text-stone-900">
+            Review Mahasiswa{" "}
+            <span className="text-stone-400 font-semibold tabular-nums">
+              ({reviews.length})
+            </span>
+          </h2>
           <Link
             href={`/dosen/${professor.id}/tulis-ulasan`}
-            className="pk-cta-black"
-            style={{
-              background: "var(--pk-ink)",
-              color: "var(--pk-paper)",
-              height: 44,
-              padding: "0 24px",
-              borderRadius: 9999,
-              fontFamily: "var(--pk-font-ui)",
-              fontWeight: 700,
-              fontSize: 14,
-              letterSpacing: "0.04em",
-              boxShadow: "var(--pk-shadow-2)",
-              textDecoration: "none",
-              display: "inline-flex",
-              alignItems: "center",
-            }}
+            className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-emerald-700 text-white text-sm font-semibold hover:bg-emerald-800 shadow-sm shadow-emerald-900/20 transition self-start"
           >
-            TULIS REVIEW
+            <Quote className="size-4" />
+            Tulis Review
           </Link>
         </div>
 
         {reviews.length > 0 ? (
-          reviews.map((review) => (
-            <ReviewCard
-              key={review.id}
-              id={review.id}
-              body={review.body}
-              rating={review.rating}
-              difficulty={review.difficulty}
-              wouldTakeAgain={review.would_take_again}
-              courseNameRaw={review.course_name_raw}
-              gradeReceived={review.grade_received}
-              semester={review.semester}
-              tags={review.tags}
-              createdAt={review.created_at}
-              authorAlias={review.author_alias}
-              thumbsUp={review.thumbs_up}
-            />
-          ))
+          <div className="space-y-4">
+            {reviews.map((review) => (
+              <ReviewCard
+                key={review.id}
+                id={review.id}
+                body={review.body}
+                rating={review.rating}
+                difficulty={review.difficulty}
+                wouldTakeAgain={review.would_take_again}
+                courseNameRaw={review.course_name_raw}
+                gradeReceived={review.grade_received}
+                semester={review.semester}
+                tags={review.tags}
+                createdAt={review.created_at}
+                authorAlias={review.author_alias}
+                thumbsUp={review.thumbs_up}
+              />
+            ))}
+          </div>
         ) : (
-          <div
-            style={{
-              background: "var(--pk-paper)",
-              border: "1px solid var(--pk-line)",
-              borderRadius: 24,
-              padding: "48px 32px",
-              textAlign: "center",
-            }}
-          >
-            <h4
-              style={{
-                margin: 0,
-                fontFamily: "var(--pk-font-ui)",
-                fontWeight: 700,
-                fontSize: 22,
-                color: "var(--pk-ink)",
-              }}
-            >
+          <div className="rounded-xl bg-white p-12 ring-1 ring-stone-200 text-center">
+            <div className="mx-auto grid place-items-center size-12 rounded-full bg-stone-100">
+              <MessageSquare className="size-6 text-stone-400" />
+            </div>
+            <h3 className="mt-4 text-lg font-semibold text-stone-900">
               Belum ada review
-            </h4>
-            <p
-              style={{
-                marginTop: 8,
-                marginBottom: 0,
-                fontFamily: "var(--pk-font-ui)",
-                fontSize: 15,
-                color: "var(--pk-fg-3)",
-              }}
-            >
+            </h3>
+            <p className="mt-1 text-sm text-stone-500">
               Jadilah yang pertama membagikan pengalaman belajar bersama dosen
               ini.
             </p>
+            <Link
+              href={`/dosen/${professor.id}/tulis-ulasan`}
+              className="mt-5 inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-emerald-700 text-white text-sm font-semibold hover:bg-emerald-800 transition"
+            >
+              Tulis Review Pertama
+              <ArrowRight className="size-4" />
+            </Link>
           </div>
         )}
       </div>
