@@ -3,7 +3,8 @@
     "allow": [
       "Bash(ls -la /tmp/design/profku-design-system/)",
       "Bash(npx tsc *)",
-      "Bash(npx eslint *)"
+      "Bash(npx eslint *)",
+      "Bash(git -C D:/Code/profku ls-files)"
     ]
   }
 }
