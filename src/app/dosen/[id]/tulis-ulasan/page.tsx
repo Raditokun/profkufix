@@ -1,8 +1,7 @@
-import { supabase } from "@/lib/supabase";
-import { notFound } from "next/navigation";
-import { SubmitReviewForm } from "@/components/submit-review-form";
-import { Building2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { notFound } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import { SubmitReviewForm } from "@/components/submit-review-form";
 
 export const revalidate = 0;
 
@@ -12,7 +11,7 @@ export default async function TulisUlasanPage({
   params: Promise<{ id: string }>;
 }) {
   const resolvedParams = await params;
-  
+
   const { data: professor, error } = await supabase
     .from("professors")
     .select(
@@ -21,7 +20,6 @@ export default async function TulisUlasanPage({
       departments (
         name,
         faculties (
-          name,
           universities (
             name
           )
@@ -32,55 +30,116 @@ export default async function TulisUlasanPage({
     .eq("id", resolvedParams.id)
     .single();
 
-  if (error || !professor) {
-    notFound();
-  }
+  if (error || !professor) notFound();
 
-  const department = typeof professor.departments === "object" ? professor.departments : null;
+  type Dept = {
+    name?: string;
+    faculties?: {
+      universities?: { name?: string } | null;
+    } | null;
+  } | null;
+  const department: Dept =
+    typeof professor.departments === "object" ? professor.departments : null;
+  const university = department?.faculties?.universities;
+
+  const displayName = professor.title
+    ? `${professor.full_name}, ${professor.title}`
+    : professor.full_name;
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
-      {/* Back Link */}
+    <div
+      style={{
+        background: "var(--pk-cream)",
+        padding: "32px 47px 80px",
+        maxWidth: 1100,
+        margin: "0 auto",
+      }}
+    >
       <Link
         href={`/dosen/${professor.id}`}
-        className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground mb-8"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 8,
+          fontFamily: "var(--pk-font-ui)",
+          fontWeight: 700,
+          fontSize: 14,
+          color: "var(--pk-fg-3)",
+          textDecoration: "none",
+          marginBottom: 24,
+        }}
       >
-        <ArrowLeft className="h-4 w-4" />
-        Kembali ke Profil {professor.full_name}
+        ← Kembali ke profil {professor.full_name}
       </Link>
 
-      {/* Header Section */}
-      <section className="mb-4">
-        <h1 className="text-3xl font-extrabold sm:text-4xl text-foreground mb-2">
-          Beri Ulasan
-        </h1>
-        <p className="text-muted-foreground text-lg">
-          Pengalaman Anda akan membantu mahasiswa lain di{" "}
-          <span className="font-semibold text-foreground">
-            {professor.title ? `${professor.full_name}, ${professor.title}` : professor.full_name}
+      {/* Identity strip */}
+      <div
+        style={{
+          background: "var(--pk-fg-3)",
+          color: "var(--pk-paper)",
+          borderRadius: 30,
+          padding: "24px 36px",
+          display: "flex",
+          alignItems: "center",
+          gap: 24,
+          flexWrap: "wrap",
+        }}
+      >
+        <div
+          aria-hidden
+          style={{
+            width: 70,
+            height: 70,
+            borderRadius: "50%",
+            background:
+              "url('/profku/img/uni-logo-its.png') center/cover no-repeat var(--pk-cream-soft)",
+            flexShrink: 0,
+          }}
+        />
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          <span
+            style={{
+              fontFamily: "var(--pk-font-ui)",
+              fontWeight: 800,
+              fontSize: 28,
+              lineHeight: 1.1,
+            }}
+          >
+            Rate · {displayName}
           </span>
-          .
-        </p>
-
-        {department && (
-          <div className="mt-4 flex items-center gap-1.5 font-medium text-primary">
-            <Building2 className="h-4 w-4 shrink-0" />
-            {department.name}
-          </div>
-        )}
-      </section>
-
-      {/* Warning/Guideline */}
-      <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mt-6">
-        <h3 className="text-sm font-bold text-primary mb-1">Panduan Pengisian:</h3>
-        <ul className="text-xs text-muted-foreground list-disc list-inside space-y-1">
-          <li>Ulasan ini bersifat 100% anonim kecuali Anda mengisi nama alias.</li>
-          <li>Jadilah objektif dan fair. Jangan gunakan bahasa kotor atau ujaran kebencian.</li>
-          <li>Fokus pada metode pengajaran, beban tugas, dan keadilan nilai.</li>
-        </ul>
+          <span
+            style={{
+              fontFamily: "var(--pk-font-ui)",
+              fontWeight: 500,
+              fontSize: 15,
+              opacity: 0.85,
+            }}
+          >
+            {department?.name && <>{department.name}</>}
+            {university?.name && <> · {university.name}</>}
+          </span>
+        </div>
       </div>
 
-      {/* Form Section */}
+      {/* Panduan */}
+      <div
+        style={{
+          marginTop: 24,
+          background: "var(--pk-primary-50)",
+          border: `1px solid var(--pk-primary)`,
+          borderRadius: 20,
+          padding: "16px 24px",
+          fontFamily: "var(--pk-font-ui)",
+          fontSize: 14,
+          color: "var(--pk-fg-2)",
+          lineHeight: 1.5,
+        }}
+      >
+        <strong style={{ color: "var(--pk-primary)" }}>Panduan:</strong>{" "}
+        Ulasanmu 100% anonim. Fokus pada metode pengajaran, beban tugas, dan
+        keadilan nilai. Jangan gunakan bahasa kotor.
+      </div>
+
       <SubmitReviewForm professorId={resolvedParams.id} />
     </div>
   );

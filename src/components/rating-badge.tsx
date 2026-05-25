@@ -1,60 +1,74 @@
-import { cn } from "@/lib/utils";
+import { chipBg, chipFg } from "@/lib/rating";
 
 interface RatingBadgeProps {
-  value: number;
+  value: number | null | undefined;
   type?: "rating" | "difficulty";
-  className?: string;
   size?: "sm" | "md" | "lg";
+  className?: string;
+  style?: React.CSSProperties;
 }
+
+const SIZES = {
+  sm: { w: 56, h: 36, fontSize: 18 },
+  md: { w: 90, h: 46, fontSize: 32 },
+  lg: { w: 132, h: 90, fontSize: 56 },
+};
 
 export function RatingBadge({
   value,
   type = "rating",
-  className,
   size = "md",
+  className,
+  style,
 }: RatingBadgeProps) {
-  let colorClass = "";
+  const dims = SIZES[size];
 
-  if (type === "rating") {
-    if (value >= 4.0) colorClass = "bg-green-500/15 text-green-400 border-green-500/20";
-    else if (value >= 2.5) colorClass = "bg-yellow-500/15 text-yellow-400 border-yellow-500/20";
-    else colorClass = "bg-red-500/15 text-red-500 border-red-500/20";
-  } else {
-    // difficulty: higher is harder (red)
-    if (value >= 4.0) colorClass = "bg-red-500/15 text-red-500 border-red-500/20";
-    else if (value >= 2.5) colorClass = "bg-yellow-500/15 text-yellow-400 border-yellow-500/20";
-    else colorClass = "bg-green-500/15 text-green-400 border-green-500/20";
-  }
-
-  const sizeClass = {
-    sm: "text-base font-bold min-w-[2.5rem] py-0.5 px-1.5",
-    md: "text-lg font-bold min-w-[3rem] py-1 px-2",
-    lg: "text-3xl font-extrabold min-w-[5rem] py-3 px-4",
-  }[size];
-
-  // If no value, return a muted badge
-  if (!value || isNaN(value)) {
+  if (value == null || isNaN(value)) {
     return (
       <div
-        className={cn(
-          "inline-flex items-center justify-center rounded-xl border border-muted bg-muted/20 text-muted-foreground",
-          sizeClass,
-          className
-        )}
+        className={className}
+        style={{
+          width: dims.w,
+          height: dims.h,
+          borderRadius: 5,
+          background: "var(--pk-rose-tint)",
+          color: "var(--pk-fg-3)",
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: "var(--pk-font-ui)",
+          fontWeight: 400,
+          fontSize: dims.fontSize,
+          fontVariantNumeric: "tabular-nums",
+          ...style,
+        }}
       >
         --
       </div>
     );
   }
 
+  // For difficulty, low = good (green); high = bad (red). Invert v for color.
+  const colorValue = type === "difficulty" ? 6 - value : value;
+
   return (
     <div
-      className={cn(
-        "inline-flex items-center justify-center rounded-xl border",
-        colorClass,
-        sizeClass,
-        className
-      )}
+      className={className}
+      style={{
+        width: dims.w,
+        height: dims.h,
+        borderRadius: 5,
+        background: chipBg(colorValue),
+        color: chipFg(colorValue),
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily: "var(--pk-font-ui)",
+        fontWeight: 400,
+        fontSize: dims.fontSize,
+        fontVariantNumeric: "tabular-nums",
+        ...style,
+      }}
     >
       {value.toFixed(1)}
     </div>

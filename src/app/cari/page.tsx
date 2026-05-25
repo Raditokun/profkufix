@@ -1,13 +1,12 @@
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { ProfessorCard } from "@/components/professor-card";
-import { Search } from "lucide-react";
 
-export const revalidate = 0; // Dynamic route
+export const revalidate = 0;
 
 async function getSearchResults(query: string) {
   if (!query) return [];
 
-  // Querying using standard websearch against the search_vector column.
   const { data, error } = await supabase
     .from("professors")
     .select(`
@@ -36,7 +35,6 @@ async function getSearchResults(query: string) {
     console.error("Search error:", error);
     return [];
   }
-
   return data;
 }
 
@@ -52,22 +50,72 @@ export default async function SearchResultsPage({
   const results = await getSearchResults(q);
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
-      {/* Search Header */}
-      <div className="mb-10 border-b border-border/50 pb-6">
-        <h1 className="text-2xl font-bold sm:text-3xl">
-          Hasil Pencarian untuk <span className="gradient-text">"{q}"</span>
+    <section
+      style={{
+        background: "var(--pk-cream)",
+        padding: "40px 47px 80px",
+        maxWidth: 1440,
+        margin: "0 auto",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "baseline",
+          gap: 16,
+          marginBottom: 28,
+          flexWrap: "wrap",
+        }}
+      >
+        <Link
+          href="/"
+          style={{
+            background: "transparent",
+            border: 0,
+            cursor: "pointer",
+            fontFamily: "var(--pk-font-ui)",
+            fontWeight: 700,
+            fontSize: 14,
+            color: "var(--pk-fg-3)",
+            padding: 0,
+            textDecoration: "none",
+          }}
+        >
+          ← Beranda
+        </Link>
+        <h1
+          style={{
+            margin: 0,
+            fontFamily: "var(--pk-font-ui)",
+            fontWeight: 800,
+            fontSize: 40,
+            color: "var(--pk-ink)",
+            lineHeight: 1.1,
+            letterSpacing: "-0.01em",
+          }}
+        >
+          Hasil untuk{" "}
+          <span style={{ color: "var(--pk-primary)" }}>
+            &quot;{q || "semua dosen"}&quot;
+          </span>
         </h1>
-        <p className="mt-2 text-muted-foreground">
-          Ditemukan {results.length} dosen yang sesuai.
-        </p>
+        <span
+          style={{
+            marginLeft: "auto",
+            fontFamily: "var(--pk-font-ui)",
+            fontWeight: 500,
+            fontSize: 16,
+            color: "var(--pk-fg-3)",
+          }}
+        >
+          {results.length} dosen
+        </span>
       </div>
 
-      {/* Results List */}
       {results.length > 0 ? (
-        <div className="grid gap-4">
-          {// eslint-disable-next-line @typescript-eslint/no-explicit-any
-          results.map((prof: any) => (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {/* eslint-disable @typescript-eslint/no-explicit-any */}
+          {results.map((prof: any) => (
             <ProfessorCard
               key={prof.id}
               id={prof.id}
@@ -78,19 +126,79 @@ export default async function SearchResultsPage({
               reviewCount={prof.review_count}
             />
           ))}
+          {/* eslint-enable */}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 py-20 text-center glass">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <Search className="h-8 w-8" />
-          </div>
-          <h3 className="text-xl font-semibold">Dosen Tidak Ditemukan</h3>
-          <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-            Kami tidak menemukan kecocokan untuk pencarian Anda. Pastikan ejaan
-            nama atau kata kunci lain sudah benar.
-          </p>
-        </div>
+        <EmptyState query={q} />
       )}
+    </section>
+  );
+}
+
+function EmptyState({ query }: { query: string }) {
+  return (
+    <div
+      style={{
+        background: "var(--pk-paper)",
+        border: "1px solid var(--pk-line)",
+        borderRadius: 30,
+        padding: "60px 40px",
+        textAlign: "center",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 16,
+      }}
+    >
+      <h3
+        style={{
+          margin: 0,
+          fontFamily: "var(--pk-font-ui)",
+          fontWeight: 800,
+          fontSize: 32,
+          color: "var(--pk-ink)",
+          letterSpacing: "-0.01em",
+        }}
+      >
+        Dosen Tidak Ditemukan
+      </h3>
+      <p
+        style={{
+          margin: 0,
+          maxWidth: 480,
+          fontFamily: "var(--pk-font-ui)",
+          fontWeight: 500,
+          fontSize: 16,
+          color: "var(--pk-fg-3)",
+        }}
+      >
+        {query
+          ? `Kami tidak menemukan kecocokan untuk "${query}". Pastikan ejaan
+              nama atau kata kunci lain sudah benar.`
+          : "Coba kata kunci nama dosen atau universitas di kotak pencarian."}
+      </p>
+      <Link
+        href="/tambah-dosen"
+        className="pk-cta-black"
+        style={{
+          marginTop: 12,
+          display: "inline-flex",
+          alignItems: "center",
+          background: "var(--pk-ink)",
+          color: "var(--pk-paper)",
+          height: 48,
+          padding: "0 32px",
+          borderRadius: 9999,
+          fontFamily: "var(--pk-font-ui)",
+          fontWeight: 700,
+          fontSize: 16,
+          letterSpacing: "0.04em",
+          textDecoration: "none",
+          boxShadow: "var(--pk-shadow-2)",
+        }}
+      >
+        TAMBAH DOSEN BARU
+      </Link>
     </div>
   );
 }

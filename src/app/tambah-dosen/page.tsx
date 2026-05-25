@@ -1,10 +1,10 @@
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { AddProfessorForm } from "@/components/add-professor-form";
 
-export const revalidate = 0; // Fetch fresh taxonomy on load
+export const revalidate = 0;
 
 export default async function TambahDosenPage() {
-  // Fetch full taxonomy: University -> Faculty -> Department
   const { data: universities, error } = await supabase
     .from("universities")
     .select(`
@@ -25,26 +25,81 @@ export default async function TambahDosenPage() {
   if (error) {
     console.error("Failed to fetch university taxonomy:", error);
     return (
-      <div className="text-center py-20 text-red-500">
+      <div
+        style={{
+          padding: "80px 24px",
+          textAlign: "center",
+          color: "var(--pk-bad-strong)",
+          fontFamily: "var(--pk-font-ui)",
+          fontWeight: 700,
+        }}
+      >
         Gagal memuat data universitas. Silakan coba lagi nanti.
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6">
-      <section className="mb-8 text-center">
-        <h1 className="text-3xl font-extrabold sm:text-4xl text-foreground mb-4">
+    <div
+      style={{
+        background: "var(--pk-cream)",
+        padding: "32px 47px 80px",
+        maxWidth: 720,
+        margin: "0 auto",
+      }}
+    >
+      <Link
+        href="/cari"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 8,
+          fontFamily: "var(--pk-font-ui)",
+          fontWeight: 700,
+          fontSize: 14,
+          color: "var(--pk-fg-3)",
+          textDecoration: "none",
+          marginBottom: 24,
+        }}
+      >
+        ← Kembali ke pencarian
+      </Link>
+
+      <section
+        style={{
+          marginBottom: 32,
+          textAlign: "center",
+        }}
+      >
+        <h1
+          style={{
+            margin: 0,
+            fontFamily: "var(--pk-font-ui)",
+            fontWeight: 800,
+            fontSize: 48,
+            color: "var(--pk-ink)",
+            letterSpacing: "-0.01em",
+            lineHeight: 1.05,
+          }}
+        >
           Tambahkan Dosen
         </h1>
-        <p className="text-muted-foreground">
-          Pastikan dosen belum terdaftar dengan menggunakan fitur pencarian
-          terlebih dahulu. Semua data yang dikirimkan akan ditinjau oleh tim
-          ProfKu sebelum dipublikasikan (Pending Status).
+        <p
+          style={{
+            marginTop: 12,
+            marginBottom: 0,
+            fontFamily: "var(--pk-font-ui)",
+            fontWeight: 500,
+            fontSize: 16,
+            color: "var(--pk-fg-3)",
+            lineHeight: 1.5,
+          }}
+        >
+          Pastikan dosen belum terdaftar lewat fitur pencarian dulu. Semua data
+          akan ditinjau tim PROFKU sebelum dipublikasi (status &quot;Pending&quot;).
         </p>
       </section>
 
-      {/* Rendering Client-Side Cascading Form */}
       <AddProfessorForm taxonomy={universities || []} />
     </div>
   );
